@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Scores</string>
+    <string name="team_1">Team 1</string>
+    <string name="team_2">Team 2</string>
+    <string name="score_1">93</string>
+    <string name="score_2">97</string>
+</resources>
