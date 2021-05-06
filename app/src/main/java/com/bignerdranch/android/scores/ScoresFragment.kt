@@ -1,12 +1,14 @@
 package com.bignerdranch.android.scores
 
 import android.content.Context
+import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,9 +19,9 @@ class ScoresFragment : Fragment() {
 
     private lateinit var scoreRecyclerView: RecyclerView
 
-    private var adapter: ScoreAdapter? = ScoreAdapter(mutableListOf(Score("hi",1,"t2",3)))
+    private var adapter: ScoreAdapter? = ScoreAdapter(emptyList())
 
-    private val crimeListViewModel: ScoresViewModel by lazy {
+    private val scoresViewModel: ScoresViewModel by lazy {
         ViewModelProviders.of(this).get(ScoresViewModel::class.java)
     }
 
@@ -44,6 +46,12 @@ class ScoresFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        scoresViewModel.scoresLiveData.observe(
+            viewLifecycleOwner,
+            Observer { scores ->
+                Log.d(TAG, "Have gallery items from ViewModel $scores")
+                scoreRecyclerView.adapter = ScoreAdapter(scores)
+            })
     }
 
     override fun onDetach() {
@@ -75,7 +83,7 @@ class ScoresFragment : Fragment() {
     private inner class ScoreHolder(view: View)
         : RecyclerView.ViewHolder(view), View.OnClickListener {
 
-        private lateinit var score: Score
+        private lateinit var gameEvent: GameEvent
 
         private val team1TextView: TextView = itemView.findViewById(R.id.team_1)
         private val score1TextView: TextView = itemView.findViewById(R.id.score_1)
@@ -86,12 +94,20 @@ class ScoresFragment : Fragment() {
             itemView.setOnClickListener(this)
         }
 
-        fun bind(score: Score) {
-            this.score = score
-            team1TextView.text = this.score.team1
-            score1TextView.text = this.score.score1.toString()
-            team2TextView.text = this.score.team2
-            score2TextView.text = this.score.score2.toString()
+        fun bind(gameEvent: GameEvent) {
+            this.gameEvent = gameEvent
+
+            val team1 = this.gameEvent.competitions[0].teams.get(0)
+            val team2 = this.gameEvent.competitions[0].teams.get(1)
+
+            team1TextView.text = team1.team.name
+            score1TextView.text = team1.score.toString()
+            team2TextView.text = team2.team.name
+            score2TextView.text = team2.score.toString()
+            if (team1.winner)
+                team1TextView.setTypeface(team1TextView.typeface, Typeface.BOLD)
+            else
+                team2TextView.setTypeface(team2TextView.typeface, Typeface.BOLD)
         }
 
         override fun onClick(v: View?) {
@@ -103,7 +119,7 @@ class ScoresFragment : Fragment() {
 
     }
 
-    private inner class ScoreAdapter(var scores: List<Score>)
+    private inner class ScoreAdapter(var scores: List<GameEvent>)
         : RecyclerView.Adapter<ScoreHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
