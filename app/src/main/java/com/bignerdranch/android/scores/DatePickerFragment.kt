@@ -3,6 +3,7 @@ package com.bignerdranch.android.scores
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.util.Log
 import android.widget.DatePicker
 import androidx.fragment.app.DialogFragment
 import java.util.*
@@ -17,15 +18,19 @@ class DatePickerFragment : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
+        val date = arguments?.getSerializable(ARG_DATE) as Date
+
         val dateListener = DatePickerDialog.OnDateSetListener {
             _: DatePicker, year: Int, month: Int, day: Int ->
             val resultDate : Date = GregorianCalendar(year, month, day).time
             targetFragment?.let { fragment ->
-                (fragment as Callbacks).onDateSelected(resultDate)
+                //Log.d("DatePickerD", resultDate.toString())
+                //Log.d("DatePickerD", date.toString())
+                if(resultDate != date)
+                    (fragment as Callbacks).onDateSelected(resultDate)
             }
         }
 
-        val date = arguments?.getSerializable(ARG_DATE) as Date
         val calendar = Calendar.getInstance()
         calendar.time = date
         val initialYear = calendar.get(Calendar.YEAR)

@@ -22,6 +22,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
     private lateinit var scoreRecyclerView: RecyclerView
     private lateinit var dateButton: Button
+    private lateinit var selectedDate: Date
 
     private var adapter: ScoreAdapter? = ScoreAdapter(emptyList())
 
@@ -47,8 +48,17 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         scoreRecyclerView.adapter = adapter
         dateButton = view.findViewById(R.id.date_button) as Button
 
+        var calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        selectedDate = calendar.time
+
+        //Log.d(TAG, selectedDate.toString())
+
         dateButton.setOnClickListener{
-            DatePickerFragment.newInstance(Date()).apply {
+            DatePickerFragment.newInstance(selectedDate).apply {
                 setTargetFragment(this@ScoresFragment, 1)
                 show(this@ScoresFragment.requireFragmentManager(), "hi")
             }
@@ -114,6 +124,8 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
             val team1 = this.gameEvent.competitions[0].teams.get(0)
             val team2 = this.gameEvent.competitions[0].teams.get(1)
+            val link = this.gameEvent.links[0].href
+            Log.d(TAG, link)
 
             team1TextView.text = team1.team.name
             score1TextView.text = team1.score.toString()
@@ -121,7 +133,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
             score2TextView.text = team2.score.toString()
             if (team1.winner)
                 team1TextView.setTypeface(team1TextView.typeface, Typeface.BOLD)
-            else
+            else if(team2.winner)
                 team2TextView.setTypeface(team2TextView.typeface, Typeface.BOLD)
         }
 
@@ -159,8 +171,10 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
     }
 
     override fun onDateSelected(date: Date) {
+
+        selectedDate = date
         var calendar = Calendar.getInstance()
-        calendar.time = date
+        calendar.time = selectedDate
         var year = calendar.get(Calendar.YEAR)
         var month = calendar.get(Calendar.MONTH) + 1
         var day = calendar.get(Calendar.DAY_OF_MONTH)
@@ -180,7 +194,8 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 Observer { scores ->
                     Log.d(TAG, "Have gallery items from ViewModel $scores")
                     scoreRecyclerView.adapter = ScoreAdapter(scores)
-                })    }
+                })
+    }
 
 }
 
