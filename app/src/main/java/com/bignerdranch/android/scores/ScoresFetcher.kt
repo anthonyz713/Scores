@@ -1,26 +1,18 @@
 package com.bignerdranch.android.scores
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.util.Log
-import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-/*import com.bignerdranch.android.photogallery.api.FlickrApi
-import com.bignerdranch.android.photogallery.api.FlickrResponse
-import com.bignerdranch.android.photogallery.api.PhotoInterceptor
-import com.bignerdranch.android.photogallery.api.PhotoResponse*/
 import okhttp3.OkHttpClient
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-private const val TAG = "ScoresFetchr"
+private const val TAG = "ScoresFetcher"
 
-class ScoresFetchr {
+class ScoresFetcher {
 
     private val scoreApi: ScoreApi
 
@@ -45,6 +37,14 @@ class ScoresFetchr {
         return fetchScoreMetadata(fetchScoresRequest())
     }
 
+    fun fetchScoresSpecificDayRequest(date: String): Call<ScoreResponse> {
+        return scoreApi.fetchScoresSpecificDay(date)
+    }
+
+    fun fetchScoresSpecificDay(date: String): LiveData<List<GameEvent>> {
+        return fetchScoreMetadata(fetchScoresSpecificDayRequest(date))
+    }
+
     private fun fetchScoreMetadata(scoreRequest: Call<ScoreResponse>)
             : LiveData<List<GameEvent>> {
         val responseLiveData: MutableLiveData<List<GameEvent>> = MutableLiveData()
@@ -53,7 +53,7 @@ class ScoresFetchr {
         scoreRequest.enqueue(object : Callback<ScoreResponse> {
 
             override fun onFailure(call: Call<ScoreResponse>, t: Throwable) {
-                Log.e(TAG, "Failed to fetch photos", t)
+                Log.e(TAG, "Failed to fetch scores", t)
             }
 
             override fun onResponse(

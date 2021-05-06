@@ -1,23 +1,27 @@
 package com.bignerdranch.android.scores
 
-import android.content.Context
+import android.app.DatePickerDialog
+import android.app.ProgressDialog.show
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.ImageView
+import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.util.*
+import javax.xml.datatype.DatatypeConstants.MONTHS
 
-private const val TAG = "CrimeListFragment"
+private const val TAG = "ScoresFragment"
 
-class ScoresFragment : Fragment() {
+class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
     private lateinit var scoreRecyclerView: RecyclerView
+    private lateinit var dateButton: Button
 
     private var adapter: ScoreAdapter? = ScoreAdapter(emptyList())
 
@@ -41,6 +45,17 @@ class ScoresFragment : Fragment() {
                 view.findViewById(R.id.scores_recycler_view) as RecyclerView
         scoreRecyclerView.layoutManager = LinearLayoutManager(context)
         scoreRecyclerView.adapter = adapter
+        dateButton = view.findViewById(R.id.date_button) as Button
+
+        dateButton.setOnClickListener{
+            DatePickerFragment.newInstance(Date()).apply {
+                setTargetFragment(this@ScoresFragment, 1)
+                show(this@ScoresFragment.requireFragmentManager(), "hi")
+            }
+        }
+        var c = Calendar.getInstance()
+        dateButton.text = "${c.get(Calendar.MONTH) + 1}/${c.get(Calendar.DAY_OF_MONTH)}/${c.get(Calendar.YEAR)}"
+
         return view
     }
 
@@ -142,6 +157,30 @@ class ScoresFragment : Fragment() {
             return ScoresFragment()
         }
     }
+
+    override fun onDateSelected(date: Date) {
+        var calendar = Calendar.getInstance()
+        calendar.time = date
+        var year = calendar.get(Calendar.YEAR)
+        var month = calendar.get(Calendar.MONTH) + 1
+        var day = calendar.get(Calendar.DAY_OF_MONTH)
+        var dateString = year.toString()
+        if (month < 10)
+            dateString += "0"
+        dateString += month
+        if (day < 10)
+            dateString += "0"
+        dateString += day
+
+        dateButton.text = "${month}/${day}/${year}"
+
+        scoresViewModel.updateScoresSpecificDate(dateString)
+        scoresViewModel.scoresLiveData.observe(
+                viewLifecycleOwner,
+                Observer { scores ->
+                    Log.d(TAG, "Have gallery items from ViewModel $scores")
+                    scoreRecyclerView.adapter = ScoreAdapter(scores)
+                })    }
 
 }
 
