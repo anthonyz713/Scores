@@ -1,20 +1,22 @@
 package com.bignerdranch.android.scores
 
-import android.app.DatePickerDialog
-import android.app.ProgressDialog.show
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
-import javax.xml.datatype.DatatypeConstants.MONTHS
 
 private const val TAG = "ScoresFragment"
 
@@ -114,6 +116,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         private val score1TextView: TextView = itemView.findViewById(R.id.score_1)
         private val team2TextView: TextView = itemView.findViewById(R.id.team_2)
         private val score2TextView: TextView = itemView.findViewById(R.id.score_2)
+        private val dateTextView: TextView = itemView.findViewById(R.id.date_text)
 
         init {
             itemView.setOnClickListener(this)
@@ -124,8 +127,35 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
             val team1 = this.gameEvent.competitions[0].teams.get(0)
             val team2 = this.gameEvent.competitions[0].teams.get(1)
+
+            val dateString = this.gameEvent.date
+            val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'")
+            dateParser.timeZone = TimeZone.getTimeZone("UTC")
+            val date = dateParser.parse(dateString)
+            val c = Calendar.getInstance()
+            c.time = date
+
+            val hour = c.get(Calendar.HOUR)
+            val hourString = when(hour){
+                0 -> "12"
+                else -> hour
+            }
+
+            val minute = c.get(Calendar.MINUTE)
+            val minuteString = when(minute){
+                in 0..9 -> "0$minute"
+                else -> minute
+            }
+
+            val amPm = c.get(Calendar.AM_PM)
+            val amPmString = when(amPm){
+                0 -> "AM"
+                else -> "PM"
+            }
+
             val link = this.gameEvent.links[0].href
-            Log.d(TAG, link)
+            //Log.d(TAG, link)
+            //Log.d(TAG, date.toString())
 
             team1TextView.text = team1.team.name
             score1TextView.text = team1.score.toString()
@@ -135,6 +165,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 team1TextView.setTypeface(team1TextView.typeface, Typeface.BOLD)
             else if(team2.winner)
                 team2TextView.setTypeface(team2TextView.typeface, Typeface.BOLD)
+            dateTextView.text = "$hourString:$minuteString $amPmString"
         }
 
         override fun onClick(v: View?) {
