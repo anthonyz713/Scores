@@ -1,22 +1,23 @@
 package com.bignerdranch.android.scores
 
+import android.content.Intent
 import android.graphics.Typeface
-import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.time.Instant
 import java.util.*
+import kotlin.concurrent.schedule
+
 
 private const val TAG = "ScoresFragment"
 
@@ -79,6 +80,15 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 Log.d(TAG, "Have gallery items from ViewModel $scores")
                 scoreRecyclerView.adapter = ScoreAdapter(scores)
             })
+
+        val mainHandler = Handler(Looper.getMainLooper())
+
+        mainHandler.post(object : Runnable {
+            override fun run() {
+                onDateSelected(selectedDate)
+                mainHandler.postDelayed(this, 15000)
+            }
+        })
     }
 
     override fun onDetach() {
@@ -88,24 +98,6 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
     }
-
-    /*override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.new_crime -> {
-                val crime = Crime()
-                crimeListViewModel.addCrime(crime)
-                callbacks?.onCrimeSelected(crime.id)
-                true
-            }
-            else -> return super.onOptionsItemSelected(item)
-        }
-    }*/
-
-    /*
-    private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
-        crimeRecyclerView.adapter = adapter
-    }*/
 
     private inner class ScoreHolder(view: View)
         : RecyclerView.ViewHolder(view), View.OnClickListener {
@@ -135,6 +127,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
             val c = Calendar.getInstance()
             c.time = date
 
+            //clean this up later
             val hour = c.get(Calendar.HOUR)
             val hourString = when(hour){
                 0 -> "12"
@@ -154,6 +147,27 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
             }
 
             val link = this.gameEvent.links[0].href
+
+            val period = this.gameEvent.status.period
+            val clock = this.gameEvent.status.clock
+
+            val completed = this.gameEvent.status.type.completed
+
+            //Log.d(TAG, "${this.gameEvent.status.type.statusName} ${this.gameEvent.status.type.statusID}")
+
+            if(completed)
+                dateTextView.text = "Final"
+            else if(this.gameEvent.status.type.statusName.equals("STATUS_IN_PROGRESS")){
+                val period = this.gameEvent.status.period
+                val displayClock = this.gameEvent.status.displayClock
+                dateTextView.text = "  Q$period\n$displayClock"
+            }
+            else if(this.gameEvent.status.type.statusName.equals("STATUS_HALFTIME"))
+                dateTextView.text = "Halftime"
+            else if(this.gameEvent.status.type.statusName.equals("STATUS_END_PERIOD"))
+                dateTextView.text = "End of Qtr ${this.gameEvent.status.period}"
+            else if(this.gameEvent.status.type.statusName.equals("STATUS_SCHEDULED"))//scheduled hasn't started
+                dateTextView.text = "$hourString:$minuteString $amPmString"
             //Log.d(TAG, link)
             //Log.d(TAG, date.toString())
 
@@ -165,15 +179,13 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 team1TextView.setTypeface(team1TextView.typeface, Typeface.BOLD)
             else if(team2.winner)
                 team2TextView.setTypeface(team2TextView.typeface, Typeface.BOLD)
-            dateTextView.text = "$hourString:$minuteString $amPmString"
         }
 
         override fun onClick(v: View?) {
+            //Log.d(TAG, gameEvent.links[0].gamePageUri.toString())
+            val intent = Intent(Intent.ACTION_VIEW, gameEvent.links[0].gamePageUri)
+            startActivity(intent)
         }
-
-        //override fun onClick(v: View) {
-          //  callbacks?.onCrimeSelected(crime.id)
-        //}
 
     }
 
