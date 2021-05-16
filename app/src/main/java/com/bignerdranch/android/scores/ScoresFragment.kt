@@ -130,47 +130,42 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
             val c = Calendar.getInstance()
             c.time = date
 
-            //clean this up later
-            val hour = c.get(Calendar.HOUR)
-            val hourString = when(hour){
+            val hourString = when(val hour = c.get(Calendar.HOUR)){
                 0 -> "12"
                 else -> hour
             }
 
-            val minute = c.get(Calendar.MINUTE)
-            val minuteString = when(minute){
+            val minuteString = when(val minute = c.get(Calendar.MINUTE)){
                 in 0..9 -> "0$minute"
                 else -> minute
             }
 
-            val amPm = c.get(Calendar.AM_PM)
-            val amPmString = when(amPm){
+            val amPmString = when(c.get(Calendar.AM_PM)){
                 0 -> "AM"
                 else -> "PM"
             }
 
-            val link = this.gameEvent.links[0].href
+            //val link = this.gameEvent.links[0].href
 
             val period = this.gameEvent.status.period
-            val clock = this.gameEvent.status.clock
+            //val clock = this.gameEvent.status.clock
 
             val completed = this.gameEvent.status.type.completed
 
             //Log.d(TAG, "${this.gameEvent.status.type.statusName} ${this.gameEvent.status.type.statusID}")
 
-            if(completed)
-                dateTextView.text = "Final"
-            else if(this.gameEvent.status.type.statusName.equals("STATUS_IN_PROGRESS")){
-                val period = this.gameEvent.status.period
-                val displayClock = this.gameEvent.status.displayClock
-                dateTextView.text = "  Q$period\n$displayClock"
+            when {
+                completed -> dateTextView.text = "Final"
+                this.gameEvent.status.type.statusName == "STATUS_IN_PROGRESS" -> {
+                    val displayClock = this.gameEvent.status.displayClock
+                    dateTextView.text = "  Q$period\n$displayClock"
+                }
+                this.gameEvent.status.type.statusName == "STATUS_HALFTIME" -> dateTextView.text = "Halftime"
+                this.gameEvent.status.type.statusName == "STATUS_END_PERIOD" -> dateTextView.text = "End of Qtr $period"
+                this.gameEvent.status.type.statusName == "STATUS_SCHEDULED" -> dateTextView.text = "$hourString:$minuteString $amPmString"
+                //Log.d(TAG, link)
+                //Log.d(TAG, date.toString())
             }
-            else if(this.gameEvent.status.type.statusName.equals("STATUS_HALFTIME"))
-                dateTextView.text = "Halftime"
-            else if(this.gameEvent.status.type.statusName.equals("STATUS_END_PERIOD"))
-                dateTextView.text = "End of Qtr ${this.gameEvent.status.period}"
-            else if(this.gameEvent.status.type.statusName.equals("STATUS_SCHEDULED"))//scheduled hasn't started
-                dateTextView.text = "$hourString:$minuteString $amPmString"
             //Log.d(TAG, link)
             //Log.d(TAG, date.toString())
 
