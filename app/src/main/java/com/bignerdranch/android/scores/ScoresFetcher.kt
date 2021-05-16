@@ -64,11 +64,10 @@ class ScoresFetcher {
                 val scoreResponse: ScoreResponse? = response.body()
                 var scores: List<GameEvent> = scoreResponse?.events
                     ?: mutableListOf()
-                scores.sortedBy {
+
+                responseLiveData.value = scores.sortedBy {
                     it.status.type
                 }
-
-                responseLiveData.value = scores
             }
         })
         return responseLiveData
