@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.concurrent.schedule
 
 
 private const val TAG = "ScoresFragment"
@@ -26,6 +25,8 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
     private lateinit var scoreRecyclerView: RecyclerView
     private lateinit var dateButton: Button
     private lateinit var selectedDate: Date
+    private val mainHandler: Handler = Handler(Looper.getMainLooper())
+
 
     private var adapter: ScoreAdapter? = ScoreAdapter(emptyList())
 
@@ -63,7 +64,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         dateButton.setOnClickListener{
             DatePickerFragment.newInstance(selectedDate).apply {
                 setTargetFragment(this@ScoresFragment, 1)
-                show(this@ScoresFragment.requireFragmentManager(), "hi")
+                show(this@ScoresFragment.requireFragmentManager(), TAG)
             }
         }
         var c = Calendar.getInstance()
@@ -77,22 +78,24 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         scoresViewModel.scoresLiveData.observe(
             viewLifecycleOwner,
             Observer { scores ->
-                Log.d(TAG, "Have gallery items from ViewModel $scores")
+                Log.d(TAG, "Have scores from ViewModel $scores")
                 scoreRecyclerView.adapter = ScoreAdapter(scores)
             })
+    }
 
-        val mainHandler = Handler(Looper.getMainLooper())
-
+    override fun onStart() {
+        super.onStart()
         mainHandler.post(object : Runnable {
             override fun run() {
-                onDateSelected(selectedDate)
-                mainHandler.postDelayed(this, 15000)
+                updateScores(selectedDate)
+                mainHandler.postDelayed(this, 5000)
             }
         })
     }
 
-    override fun onDetach() {
-        super.onDetach()
+    override fun onStop() {
+        super.onStop()
+        mainHandler.run { removeCallbacksAndMessages(null) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -207,11 +210,19 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
     }
 
-    companion object {
-        fun newInstance(): ScoresFragment {
-            return ScoresFragment()
-        }
+    private fun updateScores(date: Date) {
+
+        var calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+
+        //if today's date is selected, call update
+        if (date == calendar.time)
+            onDateSelected(date)
     }
+
 
     override fun onDateSelected(date: Date) {
 
@@ -235,9 +246,15 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         scoresViewModel.scoresLiveData.observe(
                 viewLifecycleOwner,
                 Observer { scores ->
-                    Log.d(TAG, "Have gallery items from ViewModel $scores")
+                    Log.d(TAG, "Have scores from ViewModel")
                     scoreRecyclerView.adapter = ScoreAdapter(scores)
                 })
+    }
+
+    companion object {
+        fun newInstance(): ScoresFragment {
+            return ScoresFragment()
+        }
     }
 
 }
