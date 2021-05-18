@@ -6,17 +6,11 @@ import java.util.*
 
 class ScoresViewModel : ViewModel() {
 
-    var scoresLiveData: LiveData<List<GameEvent>>
+    lateinit var scoresLiveData: LiveData<List<GameEvent>>
 
     private val scoresFetcher = ScoresFetcher()
 
     fun updateScoresSpecificDate(date: String) {
         scoresLiveData = scoresFetcher.fetchScoresSpecificDay(date)
     }
-
-    init {
-        scoresLiveData = scoresFetcher.fetchScores()
-    }
-
-
 }

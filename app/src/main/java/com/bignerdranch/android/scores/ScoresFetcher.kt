@@ -29,14 +29,6 @@ class ScoresFetcher {
         scoreApi = retrofit.create(ScoreApi::class.java)
     }
 
-    fun fetchScoresRequest(): Call<ScoreResponse> {
-        return scoreApi.fetchScores()
-    }
-
-    fun fetchScores(): LiveData<List<GameEvent>> {
-        return fetchScoreMetadata(fetchScoresRequest())
-    }
-
     fun fetchScoresSpecificDayRequest(date: String): Call<ScoreResponse> {
         return scoreApi.fetchScoresSpecificDay(date)
     }

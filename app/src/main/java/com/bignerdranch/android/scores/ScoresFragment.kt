@@ -31,6 +31,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
     private lateinit var scoreRecyclerView: RecyclerView
     private lateinit var dateButton: Button
     private lateinit var selectedDate: Date
+    private lateinit var noGames: TextView
     private val mainHandler: Handler = Handler(Looper.getMainLooper())
 
 
@@ -38,11 +39,6 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
     private val scoresViewModel: ScoresViewModel by lazy {
         ViewModelProviders.of(this).get(ScoresViewModel::class.java)
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        //setHasOptionsMenu(true)
     }
 
     override fun onCreateView(
@@ -57,6 +53,7 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         scoreRecyclerView.layoutManager = LinearLayoutManager(context)
         scoreRecyclerView.adapter = adapter
         dateButton = view.findViewById(R.id.date_button) as Button
+        noGames = view.findViewById(R.id.no_games)
 
         var calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -77,16 +74,6 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         dateButton.text = "${c.get(Calendar.MONTH) + 1}/${c.get(Calendar.DAY_OF_MONTH)}/${c.get(Calendar.YEAR)}"
 
         return view
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        scoresViewModel.scoresLiveData.observe(
-            viewLifecycleOwner,
-            Observer { scores ->
-                Log.d(TAG, "Have scores from ViewModel $scores")
-                scoreRecyclerView.adapter = ScoreAdapter(scores)
-            })
     }
 
     override fun onStart() {
@@ -195,7 +182,6 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
                 //set notification
                 ScoresActivity.createNotification(this.gameEvent, c)
-
             }
 
         }
@@ -213,12 +199,14 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int)
                 : ScoreHolder {
+
             val view = layoutInflater.inflate(R.layout.list_item_game, parent, false)
             return ScoreHolder(view)
         }
 
         override fun getItemCount() = scores.size
 
+        @RequiresApi(Build.VERSION_CODES.N)
         override fun onBindViewHolder(holder: ScoreHolder, position: Int) {
             val score = scores[position]
             holder.bind(score)
@@ -264,7 +252,12 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 Observer { scores ->
                     Log.d(TAG, "Have scores from ViewModel")
                     scoreRecyclerView.adapter = ScoreAdapter(scores)
+                    noGames.visibility = when{
+                        scores.isEmpty() -> View.VISIBLE
+                        else -> View.GONE
+                    }
                 })
+
     }
 
     companion object {
