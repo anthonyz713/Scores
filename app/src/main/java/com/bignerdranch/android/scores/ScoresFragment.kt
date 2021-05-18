@@ -1,7 +1,9 @@
 package com.bignerdranch.android.scores
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +11,10 @@ import android.util.Log
 import android.view.*
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -112,11 +118,13 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
         private val team2TextView: TextView = itemView.findViewById(R.id.team_2)
         private val score2TextView: TextView = itemView.findViewById(R.id.score_2)
         private val dateTextView: TextView = itemView.findViewById(R.id.date_text)
+        private val scheduleButton: Button = itemView.findViewById(R.id.schedule_button)
 
         init {
             itemView.setOnClickListener(this)
         }
 
+        @RequiresApi(Build.VERSION_CODES.N)
         fun bind(gameEvent: GameEvent) {
             this.gameEvent = gameEvent
 
@@ -162,7 +170,10 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 }
                 this.gameEvent.status.type.statusName == "STATUS_HALFTIME" -> dateTextView.text = "Halftime"
                 this.gameEvent.status.type.statusName == "STATUS_END_PERIOD" -> dateTextView.text = "End of Qtr $period"
-                this.gameEvent.status.type.statusName == "STATUS_SCHEDULED" -> dateTextView.text = "$hourString:$minuteString $amPmString"
+                this.gameEvent.status.type.statusName == "STATUS_SCHEDULED" -> {
+                    dateTextView.text = "$hourString:$minuteString $amPmString"
+                    scheduleButton.visibility = View.VISIBLE
+                }
                 //Log.d(TAG, link)
                 //Log.d(TAG, date.toString())
             }
@@ -177,6 +188,16 @@ class ScoresFragment : Fragment(), DatePickerFragment.Callbacks {
                 team1TextView.setTypeface(team1TextView.typeface, Typeface.BOLD)
             else if(team2.winner)
                 team2TextView.setTypeface(team2TextView.typeface, Typeface.BOLD)
+
+            scheduleButton.setOnClickListener{
+                Toast.makeText(activity, "Reminder for ${this.gameEvent.shortName} set!", Toast.LENGTH_SHORT).show()
+                scheduleButton.visibility = View.INVISIBLE
+
+                //set notification
+                ScoresActivity.createNotification(this.gameEvent, c)
+
+            }
+
         }
 
         override fun onClick(v: View?) {
